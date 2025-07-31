@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('players', function (Blueprint $table) {
-            $table->foreignId('club_id')->nullable()->constrained('clubs')->onDelete('set null');
+            // Drop the foreign key constraint first
+            // Then drop the actual column
+            $table->dropColumn('clubs_id');
         });
     }
 
@@ -22,8 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('players', function (Blueprint $table) {
-            $table->dropForeign(['clubs_id']);
-            $table->dropColumn('clubs_id');
+            // Re-add the column and constraint
+            $table->string('clubs_id')->nullable()->constrained('clubs')->onDelete('set null');
         });
     }
 };
