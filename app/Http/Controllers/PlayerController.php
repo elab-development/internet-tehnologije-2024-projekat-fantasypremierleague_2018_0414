@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Player;
 use Illuminate\Http\Request;
 
@@ -11,7 +12,8 @@ class PlayerController extends Controller
      */
     public function index()
     {
-        return response()-> json(Player::all(), 200);
+        $players = Player::all();
+        return response()->json($players, 200);
     }
 
     /**
@@ -19,7 +21,16 @@ class PlayerController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'position' => 'nullable|string|max:100',
+            'club_id' => 'nullable|integer|exists:clubs,id',
+            'price' => 'required|integer|min:0',
+        ]);
+
+        $player = Player::create($validated);
+
+        return response()->json($player, 201); // Created
     }
 
     /**
@@ -27,7 +38,13 @@ class PlayerController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $player = Player::find($id);
+
+        if (!$player) {
+            return response()->json(['message' => 'Player not found'], 404);
+        }
+
+        return response()->json($player, 200);
     }
 
     /**
@@ -35,7 +52,22 @@ class PlayerController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $player = Player::find($id);
+
+        if (!$player) {
+            return response()->json(['message' => 'Player not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'position' => 'sometimes|nullable|string|max:100',
+            'club_id' => 'sometimes|nullable|integer|exists:clubs,id',
+            'price' => 'sometimes|required|integer|min:0',
+        ]);
+
+        $player->update($validated);
+
+        return response()->json($player, 200);
     }
 
     /**
@@ -43,6 +75,14 @@ class PlayerController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $player = Player::find($id);
+
+        if (!$player) {
+            return response()->json(['message' => 'Player not found'], 404);
+        }
+
+        $player->delete();
+
+        return response()->json(['message' => 'Player deleted successfully'], 200);
     }
 }
