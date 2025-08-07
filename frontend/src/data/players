@@ -1,0 +1,28 @@
+export const  players = [
+  {
+    id: 1,
+    name: "Erling Haaland",
+    team: "Manchester City",
+    position: "Forward",
+    predictedPoints: 9.2,
+    clubLogo: "https://resources.premierleague.com/premierleague/badges/t43.svg"
+  },
+  {
+    id: 2,
+    name: "Mohamed Salah",
+    team: "Liverpool",
+    position: "Midfielder",
+    predictedPoints: 8.7,
+    clubLogo: "https://resources.premierleague.com/premierleague/badges/t14.svg"
+  },
+  {
+    id: 3,
+    name: "Bukayo Saka",
+    team: "Arsenal",
+    position: "Midfielder",
+    predictedPoints: 7.4,
+    clubLogo: "https://resources.premierleague.com/premierleague/badges/t3.svg"
+  }
+];
+
+
