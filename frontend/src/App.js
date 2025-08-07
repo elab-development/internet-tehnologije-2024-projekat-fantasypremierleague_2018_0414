@@ -27,7 +27,7 @@ import PlayerCard from './components/PlayerCard';
   }
 ];
 
-console.log ("Players data:", players);
+
 
 
 
@@ -45,9 +45,16 @@ function App() {
             points={player.predictedPoints}
           />
         ))}
+         
       </div>
+
+      
     </div>
   );
 }
+
+
+
+
 
 export default App;
