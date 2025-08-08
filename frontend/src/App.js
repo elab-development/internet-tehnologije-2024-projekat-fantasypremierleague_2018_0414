@@ -1,5 +1,7 @@
 import './App.css';
-import PlayerCard from './components/PlayerCard';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './components/HomePage';
+
  const  players = [
   {
     id: 1,
@@ -32,24 +34,12 @@ import PlayerCard from './components/PlayerCard';
 
 
 function App() {
-  console.log("Players data:", players);
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <div className="flex flex-wrap gap-4 justify-center">
-        {players.map(player => (
-          <PlayerCard
-            key={player.id}
-            name={player.name}
-            photo={player.photo}
-            position={player.position}
-            points={player.predictedPoints}
-          />
-        ))}
-         
-      </div>
-
-      
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
