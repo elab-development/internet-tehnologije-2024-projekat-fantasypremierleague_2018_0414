@@ -10,12 +10,13 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('player_team', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('teams_id')->constrained()->onDelete('cascade');
-            $table->foreignId('players_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-        });
+       Schema::create('player_team', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('player_id')->constrained()->onDelete('cascade');
+    $table->foreignId('team_id')->constrained()->onDelete('cascade');
+    $table->timestamps();
+});
+
     }
 
     /**

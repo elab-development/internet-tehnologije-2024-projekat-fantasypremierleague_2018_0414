@@ -6,26 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('players', function (Blueprint $table) {
-            // Drop the foreign key constraint first
-            // Then drop the actual column
-            $table->dropColumn('clubs_id');
-        });
+      //  Schema::table('players', function (Blueprint $table) {
+     //       $table->dropForeign(['club_id']);
+    //        $table->dropColumn('club_id');    
+   //     });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('players', function (Blueprint $table) {
-            // Re-add the column and constraint
-            $table->string('clubs_id')->nullable()->constrained('clubs')->onDelete('set null');
-        });
+      //  Schema::table('players', function (Blueprint $table) {
+       //     $table->foreignId('club_id')->nullable()->constrained()->onDelete('set null');
+      //  });
     }
 };
