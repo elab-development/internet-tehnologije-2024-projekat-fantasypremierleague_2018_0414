@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import RegistrationPage from './components/RegistrationPage';
+import Analytics from './components/Analytics';
 
  const  players = [
   {
@@ -42,12 +43,11 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegistrationPage />} />
+        <Route path="/analytics" element={<Analytics />} /> 
       </Routes>
     </BrowserRouter>
   );
 }
-
-
 
 
 

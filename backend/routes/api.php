@@ -15,7 +15,7 @@ Route::get('analytics/pl-standings', [TableController::class, 'plStandings']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('teams', TeamController::class);
-    Route::apiResource('players', PlayerController::class);
+   // Route::apiResource('players', PlayerController::class);
 
     Route::post('teams/{team}/add-player', [TeamController::class, 'addPlayer']);
     Route::delete('teams/{team}/remove-player/{player}', [TeamController::class, 'removePlayer']);

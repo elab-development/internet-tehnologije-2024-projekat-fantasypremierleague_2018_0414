@@ -4,27 +4,35 @@ import axios from "axios";
 
 export default function PlayerSearch() {
   // --- States for filters ---
-  const [name, setName] = useState("");         // search by player name
-  const [position, setPosition] = useState(""); // search by position
-  const [team, setTeam] = useState("");         // search by team
-  const [page, setPage] = useState(1);          // pagination
-  const [players, setPlayers] = useState([]);   // list of players
-  const [meta, setMeta] = useState({});         // pagination info
+  const [name, setName] = useState("");         
+  const [position, setPosition] = useState(""); 
+  const [club, setClub] = useState("");         // now it's club, not team
+  const [page, setPage] = useState(1);          
+  const [players, setPlayers] = useState([]);   
+  const [meta, setMeta] = useState({            // default values
+    current_page: 1,
+    last_page: 1,
+  });
 
   // Fetch players whenever filters or page change 
   useEffect(() => {
     fetchPlayers();
-  }, [name, position, team, page]);
+  }, [name, position, club, page]);
 
   const fetchPlayers = async () => {
     try {
       const res = await axios.get("http://127.0.0.1:8000/api/players", {
-        params: { name, position, team, page },
+        params: { name, position, club, page },
       });
-      setPlayers(res.data.data);
-      setMeta(res.data.meta);
+      setPlayers(res.data.data || []);
+      setMeta({
+        current_page: res.data.current_page || 1,
+        last_page: res.data.last_page || 1,
+      });
     } catch (error) {
       console.error("Error fetching players:", error);
+      setPlayers([]);
+      setMeta({ current_page: 1, last_page: 1 });
     }
   };
 
@@ -34,25 +42,17 @@ export default function PlayerSearch() {
 
       {/* --- Filters --- */}
       <div className="flex flex-col md:flex-row gap-4 mb-4">
-        {/* Name filter */}
         <input
           type="text"
           placeholder="Search by name..."
           value={name}
-          onChange={(e) => {
-            setPage(1); // reset page to 1 when searching
-            setName(e.target.value);
-          }}
+          onChange={(e) => { setPage(1); setName(e.target.value); }}
           className="border p-2 rounded w-full md:w-1/3"
         />
 
-        {/* Position filter */}
         <select
           value={position}
-          onChange={(e) => {
-            setPage(1);
-            setPosition(e.target.value);
-          }}
+          onChange={(e) => { setPage(1); setPosition(e.target.value); }}
           className="border p-2 rounded w-full md:w-1/3"
         >
           <option value="">All Positions</option>
@@ -62,15 +62,11 @@ export default function PlayerSearch() {
           <option value="Forward">Forward</option>
         </select>
 
-        {/* Team filter */}
         <input
           type="text"
-          placeholder="Search by team..."
-          value={team}
-          onChange={(e) => {
-            setPage(1);
-            setTeam(e.target.value);
-          }}
+          placeholder="Search by club..."
+          value={club}
+          onChange={(e) => { setPage(1); setClub(e.target.value); }}
           className="border p-2 rounded w-full md:w-1/3"
         />
       </div>
@@ -80,7 +76,7 @@ export default function PlayerSearch() {
         <thead>
           <tr>
             <th className="border p-2">Name</th>
-            <th className="border p-2">Team</th>
+            <th className="border p-2">Club</th>
             <th className="border p-2">Position</th>
           </tr>
         </thead>
@@ -89,15 +85,13 @@ export default function PlayerSearch() {
             players.map((p) => (
               <tr key={p.id}>
                 <td className="border p-2">{p.name}</td>
-                <td className="border p-2">{p.team}</td>
+                <td className="border p-2">{p.club?.name ?? "N/A"}</td>
                 <td className="border p-2">{p.position}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="3" className="text-center p-4">
-                No players found
-              </td>
+              <td colSpan="3" className="text-center p-4">No players found</td>
             </tr>
           )}
         </tbody>
@@ -113,7 +107,7 @@ export default function PlayerSearch() {
           Prev
         </button>
         <span>
-          Page {meta.current_page ?? 1} of {meta.last_page ?? 1}
+          Page {meta.current_page} of {meta.last_page}
         </span>
         <button
           disabled={page === meta.last_page}

@@ -1,5 +1,5 @@
 // Analytics.jsx
-import PlayerSearch from "./components/PlayerSearch";
+import PlayerSearch from './PlayerSearch.jsx';
 
 export default function Analytics() {
   return (
