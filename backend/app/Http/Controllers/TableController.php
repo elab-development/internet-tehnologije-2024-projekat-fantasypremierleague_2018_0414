@@ -8,7 +8,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
 
-<?php
 
 namespace App\Http\Controllers;
 
@@ -23,14 +22,12 @@ class TableController extends Controller
             'X-Auth-Token' => env('FOOTBALL_API_TOKEN')
         ])->get('https://api.football-data.org/v4/competitions/PL/standings');
 
-        // Handle API errors
         if ($response->failed()) {
             return response()->json(['error' => 'Failed to fetch standings'], 500);
         }
 
         $standings = $response->json();
 
-        // Extract only the main league table
         if (isset($standings['standings'][0]['table'])) {
             $plTable = $standings['standings'][0]['table'];
         } else {
