@@ -15,9 +15,13 @@ export default function PlayerSearch() {
 
   const fetchPlayers = async () => {
     try {
+      console.log({ name, position, club, page }); // debug
       const res = await axios.get("http://127.0.0.1:8000/api/players", {
         params: { name, position, club, page },
       });
+
+      console.log("API response:", res.data); // debug
+
       setPlayers(res.data.data || []);
       setMeta({
         current_page: res.data.current_page || 1,
@@ -52,10 +56,10 @@ export default function PlayerSearch() {
           className="bg-purple-700 text-white border border-purple-500 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 w-full md:w-1/3"
         >
           <option value="">All Positions</option>
-          <option value="Goalkeeper">Goalkeeper</option>
-          <option value="Defender">Defender</option>
-          <option value="Midfielder">Midfielder</option>
-          <option value="Forward">Forward</option>
+          <option value="GKP">Goalkeeper</option>
+          <option value="DEF">Defender</option>
+          <option value="MID">Midfielder</option>
+          <option value="FWD">Forward</option>
         </select>
 
         <input
@@ -75,20 +79,26 @@ export default function PlayerSearch() {
               <th className="p-3 text-purple-200">Name</th>
               <th className="p-3 text-purple-200">Club</th>
               <th className="p-3 text-purple-200">Position</th>
+              <th className="p-3 text-purple-200">Price</th>
+              <th className="p-3 text-purple-200">Points</th>
             </tr>
           </thead>
           <tbody>
             {players.length > 0 ? (
               players.map((p) => (
                 <tr key={p.id} className="hover:bg-purple-600 transition">
-                  <td className="p-3 border-t border-purple-600">{p.name}</td>
+                  <td className="p-3 border-t border-purple-600">
+                    {p.first_name} {p.second_name}
+                  </td>
                   <td className="p-3 border-t border-purple-600">{p.club?.name ?? "N/A"}</td>
                   <td className="p-3 border-t border-purple-600">{p.position}</td>
+                  <td className="p-3 border-t border-purple-600">{p.price}</td>
+                  <td className="p-3 border-t border-purple-600">{p.total_points}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="3" className="text-center p-4 text-purple-300">
+                <td colSpan="5" className="text-center p-4 text-purple-300">
                   No players found
                 </td>
               </tr>

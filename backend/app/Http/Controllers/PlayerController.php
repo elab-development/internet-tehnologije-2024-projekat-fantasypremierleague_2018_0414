@@ -83,19 +83,25 @@ class PlayerController extends Controller
     }
 
 
-   public function index(Request $request)
+ public function index(Request $request)
 {
     $query = Player::query();
 
-    if ($request->has('name')) {
-        $query->where('name', 'like', '%' . $request->name . '%');
+    // Search by first_name or second_name
+    if ($request->has('name') && $request->name !== '') {
+        $query->where(function($q) use ($request) {
+            $q->where('first_name', 'like', '%' . $request->name . '%')
+              ->orWhere('second_name', 'like', '%' . $request->name . '%');
+        });
     }
 
-    if ($request->has('position')) {
+    // Filter by position (GKP, DEF, MID, FWD)
+    if ($request->has('position') && $request->position !== '') {
         $query->where('position', $request->position);
     }
 
-    if ($request->has('club')) {  // filter by club name
+    // Filter by club name
+    if ($request->has('club') && $request->club !== '') {
         $clubName = $request->club;
         $query->whereHas('club', function($q) use ($clubName) {
             $q->where('name', 'like', '%' . $clubName . '%');
@@ -104,11 +110,10 @@ class PlayerController extends Controller
 
     $perPage = $request->get('per_page', 10);
 
-    // eager load club info for the response
+    // Eager load club info
     $players = $query->with('club')->paginate($perPage)->withPath('/api/players');
 
     return response()->json($players);
 }
-
 
 }

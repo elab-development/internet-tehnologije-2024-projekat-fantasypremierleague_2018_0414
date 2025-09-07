@@ -45,22 +45,21 @@ class ImportPlayers extends Command
 
                 // Step 4: Insert the player
                 Player::create([
-                    'first_name'     => $data['first_name'],
-                    'second_name'    => $data['second_name'],
+                    'first_name' => $data['first_name'],
+                    'second_name' => $data['second_name'],
                     'position' => $data['player_position'],
-                    'club_id'  => $club->id,
-                    'price'    => $data['player_cost'],
-                    'goals' => $data['goals_scored'],
-                    'assists' => $data['assists'],
-                    'total_points' => $data['total_points'],
-                    'expected_goals' => $data['expected_goals'],
-                    'expected_assists' => $data['expected_assists'],
-                    'gw1_points' => $data['gw1_points'],
-                    'gw2_points' => $data['gw2_points'],
-                    'gw3_points' => $data['gw3_points'],
-                    'gw4_points' => $data['gw4_points'],
-                    'gw5_points' => $data['gw5_points'],
-
+                    'club_id' => $club->id,
+                    'price' => $data['player_cost'] ,
+                    'goals' => $data['goals_scored'] ?? 0,
+                    'assists' => $data['assists'] ?? 0,
+                    'total_points' => $data['total_points'] ?? 0,
+                    'expected_goals' => $data['expected_goals'] ?? 0.0,
+                    'expected_assists' => $data['expected_assists'] ?? 0.0,
+                    'gw1_points' => $data['gw1_points'] !== '' ? $data['gw1_points'] : 0.0,
+                    'gw2_points' => $data['gw2_points'] !== '' ? $data['gw2_points'] : 0.0,
+                    'gw3_points' => $data['gw3_points'] !== '' ? $data['gw3_points'] : 0.0,
+                    'gw4_points' => $data['gw4_points'] !== '' ? $data['gw4_points'] : 0.0,
+                    'gw5_points' => $data['gw5_points'] !== '' ? $data['gw5_points'] : 0.0,
                 ]);
 
 

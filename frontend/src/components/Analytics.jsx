@@ -20,7 +20,6 @@ export default function Analytics() {
             {/* Player Search Card */}
             <div className="bg-purple-800 rounded-2xl shadow-lg border border-purple-600 p-6">
               <h2 className="text-2xl font-semibold mb-4 text-purple-100">
-                Player Search
               </h2>
               <PlayerSearch />
             </div>

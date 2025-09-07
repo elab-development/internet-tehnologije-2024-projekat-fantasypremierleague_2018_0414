@@ -8,6 +8,12 @@ use Illuminate\Http\Request;
 class Player extends Model
 {
     use HasFactory; 
+
+   
+           
+
+
+
     protected $fillable = [
         'first_name',
         'second_name', 
@@ -16,8 +22,23 @@ class Player extends Model
         'price',
         'total_points',
         'assists',
-        'goals'
+        'goals',
+        'expected_goals',
+        'expected_assists',
+        'gw1_points',
+        'gw2_points',
+        'gw3_points',
+        'gw4_points',
+        'gw5_points'
     ];
+
+
+
+
+
+
+
+    
 
     // Each player belongs to a single club
     public function club()
