@@ -2,25 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
-namespace App\Http\Controllers;
-
-use Illuminate\Support\Facades\Http;
-
-
-namespace App\Http\Controllers;
-
 use Illuminate\Support\Facades\Http;
 
 class TableController extends Controller
 {
-    public function index()
+    public function plStandings()
     {
-        // Call the Football-Data API
+        // Call the Football-Data API with SSL verification disabled
         $response = Http::withHeaders([
             'X-Auth-Token' => env('FOOTBALL_API_TOKEN')
-        ])->get('https://api.football-data.org/v4/competitions/PL/standings');
+        ])->withoutVerifying() // <-- quick fix
+          ->get('https://api.football-data.org/v4/competitions/PL/standings');
 
         if ($response->failed()) {
             return response()->json(['error' => 'Failed to fetch standings'], 500);
@@ -34,6 +26,8 @@ class TableController extends Controller
             return response()->json(['error' => 'Standings data not found'], 404);
         }
 
-        return response()->json($plTable);
+        // Return JSON in a way React can consume
+        return response()->json(['standings' => $plTable]);
     }
 }
+
