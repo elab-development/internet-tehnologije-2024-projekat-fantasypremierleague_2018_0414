@@ -1,20 +1,14 @@
-// src/components/PlayerSearchComponent.jsx
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function PlayerSearch() {
-  // --- States for filters ---
   const [name, setName] = useState("");         
   const [position, setPosition] = useState(""); 
-  const [club, setClub] = useState("");         // now it's club, not team
+  const [club, setClub] = useState("");         
   const [page, setPage] = useState(1);          
   const [players, setPlayers] = useState([]);   
-  const [meta, setMeta] = useState({            // default values
-    current_page: 1,
-    last_page: 1,
-  });
+  const [meta, setMeta] = useState({ current_page: 1, last_page: 1 });
 
-  // Fetch players whenever filters or page change 
   useEffect(() => {
     fetchPlayers();
   }, [name, position, club, page]);
@@ -37,23 +31,25 @@ export default function PlayerSearch() {
   };
 
   return (
-    <div className="p-4 border rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold mb-4">Player Search</h2>
+    <div className="p-6 bg-purple-800 rounded-2xl shadow-lg border border-purple-600">
+      <h2 className="text-2xl font-semibold mb-6 text-purple-100">
+        Player Search
+      </h2>
 
       {/* --- Filters --- */}
-      <div className="flex flex-col md:flex-row gap-4 mb-4">
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
         <input
           type="text"
           placeholder="Search by name..."
           value={name}
           onChange={(e) => { setPage(1); setName(e.target.value); }}
-          className="border p-2 rounded w-full md:w-1/3"
+          className="bg-purple-700 text-white placeholder-purple-300 border border-purple-500 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 w-full md:w-1/3"
         />
 
         <select
           value={position}
           onChange={(e) => { setPage(1); setPosition(e.target.value); }}
-          className="border p-2 rounded w-full md:w-1/3"
+          className="bg-purple-700 text-white border border-purple-500 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 w-full md:w-1/3"
         >
           <option value="">All Positions</option>
           <option value="Goalkeeper">Goalkeeper</option>
@@ -67,52 +63,56 @@ export default function PlayerSearch() {
           placeholder="Search by club..."
           value={club}
           onChange={(e) => { setPage(1); setClub(e.target.value); }}
-          className="border p-2 rounded w-full md:w-1/3"
+          className="bg-purple-700 text-white placeholder-purple-300 border border-purple-500 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 w-full md:w-1/3"
         />
       </div>
 
       {/* --- Player Table --- */}
-      <table className="w-full border">
-        <thead>
-          <tr>
-            <th className="border p-2">Name</th>
-            <th className="border p-2">Club</th>
-            <th className="border p-2">Position</th>
-          </tr>
-        </thead>
-        <tbody>
-          {players.length > 0 ? (
-            players.map((p) => (
-              <tr key={p.id}>
-                <td className="border p-2">{p.name}</td>
-                <td className="border p-2">{p.club?.name ?? "N/A"}</td>
-                <td className="border p-2">{p.position}</td>
-              </tr>
-            ))
-          ) : (
+      <div className="overflow-x-auto rounded-lg border border-purple-600">
+        <table className="w-full text-left border-collapse">
+          <thead className="bg-purple-700">
             <tr>
-              <td colSpan="3" className="text-center p-4">No players found</td>
+              <th className="p-3 text-purple-200">Name</th>
+              <th className="p-3 text-purple-200">Club</th>
+              <th className="p-3 text-purple-200">Position</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {players.length > 0 ? (
+              players.map((p) => (
+                <tr key={p.id} className="hover:bg-purple-600 transition">
+                  <td className="p-3 border-t border-purple-600">{p.name}</td>
+                  <td className="p-3 border-t border-purple-600">{p.club?.name ?? "N/A"}</td>
+                  <td className="p-3 border-t border-purple-600">{p.position}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3" className="text-center p-4 text-purple-300">
+                  No players found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* --- Pagination Controls --- */}
-      <div className="flex gap-2 mt-4 items-center">
+      <div className="flex gap-3 mt-6 items-center justify-center">
         <button
           disabled={page === 1}
           onClick={() => setPage((p) => p - 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="px-4 py-2 bg-purple-700 rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           Prev
         </button>
-        <span>
+        <span className="text-purple-200">
           Page {meta.current_page} of {meta.last_page}
         </span>
         <button
           disabled={page === meta.last_page}
           onClick={() => setPage((p) => p + 1)}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="px-4 py-2 bg-purple-700 rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           Next
         </button>
