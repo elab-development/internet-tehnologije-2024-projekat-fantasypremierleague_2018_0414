@@ -1,55 +1,38 @@
 import React from 'react';
 
-const PlayerCard = ({ name, photo, position, points }) => {
- 
+const PlayerCard = ({ player }) => {
   const positionStyles = {
-    Goalkeeper: {
-      bg: 'bg-yellow-300',
-      text: 'text-black',
-      short: 'GKP'
-    },
-    Defender: {
-      bg: 'bg-yellow-400', 
-      text: 'text-black',
-      short: 'DEF'
-    },
-    Midfielder: {
-      bg: 'bg-green-400',
-      text: 'text-white',
-      short: 'MID'
-    },
-    Forward: {
-      bg: 'bg-red-400',
-      text: 'text-white', 
-      short: 'FWD'
-    }
+    Goalkeeper: { bg: 'bg-yellow-300', text: 'text-black', short: 'GKP' },
+    Defender: { bg: 'bg-yellow-400', text: 'text-black', short: 'DEF' },
+    Midfielder: { bg: 'bg-green-400', text: 'text-white', short: 'MID' },
+    Forward: { bg: 'bg-red-400', text: 'text-white', short: 'FWD' }
   };
 
-  const style = positionStyles[position] || positionStyles.Midfielder;
+
+  const style = positionStyles[player.position] || positionStyles.Midfielder;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg w-48 shadow-sm hover:shadow-md transition-shadow duration-200">
-      <div className="p-3  border-b border-gray-150">
+      <div className="p-3 border-b border-gray-150">
         <div className="flex justify-between items-center mb-2">
           <span className={`${style.bg} ${style.text} text-xs font-bold px-2 py-1 rounded`}>
             {style.short}
           </span>
-          <span className="text-lg font-bold text-gray-900">{points}</span>
+          <span className="text-lg font-bold text-gray-900">{player.total_points}</span>
         </div>
-        
+
         <div className="flex justify-center mb-3">
           <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
             <img
-              src={photo}
-              alt={name}
+              src={player.photo_url || '/default-player.png'} // Use photo from DB or fallback
+              alt={`${player.first_name} ${player.second_name}`}
               className="w-full h-full object-cover object-top"
-              
             />
           </div>
         </div>
 
         <h3 className="text-sm font-medium text-gray-900 text-center leading-tight">
-          {name}
+          {player.first_name} {player.second_name}
         </h3>
       </div>
 
@@ -64,4 +47,3 @@ const PlayerCard = ({ name, photo, position, points }) => {
 };
 
 export default PlayerCard;
-

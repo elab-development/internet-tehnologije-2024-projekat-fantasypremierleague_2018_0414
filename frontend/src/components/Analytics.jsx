@@ -1,8 +1,13 @@
+import { useState } from "react";
 import Navbar from "./Navbar.jsx";
 import PlayerSearch from "./PlayerSearch.jsx";
 import Standings from "./Standings.jsx";
+import PlayerCard from "./PlayerCard.jsx";
+import PlayerFormChart from "./PlayerFormChart.jsx";
 
 export default function Analytics() {
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-purple-950 text-white">
       {/* Navbar */}
@@ -20,13 +25,33 @@ export default function Analytics() {
             {/* Player Search Card */}
             <div className="bg-purple-800 rounded-2xl shadow-lg border border-purple-600 p-6">
               <h2 className="text-2xl font-semibold mb-4 text-purple-100">
+                Search Players
               </h2>
-              <PlayerSearch />
+              <PlayerSearch setSelectedPlayer={setSelectedPlayer} />
             </div>
 
-            {/* Placeholder for Charts / Stats */}
-            <div className="bg-purple-800 rounded-2xl shadow-lg border border-purple-600 p-6 h-64 flex items-center justify-center text-purple-200">
-              Player / Team Stats Chart (coming soon)
+            {/* Player / Team Stats */}
+            <div className="bg-purple-800 rounded-2xl shadow-lg border border-purple-600 p-6 min-h-[300px]">
+              {selectedPlayer ? (
+                <div className="flex gap-6">
+                  {/* Player Card */}
+                  <div className="w-1/3">
+                    <PlayerCard player={selectedPlayer} />
+                  </div>
+
+                  {/* Graph for Player Form */}
+                  <div className="w-2/3 text-white">
+                    <h3 className="text-xl font-semibold mb-2">
+                      {selectedPlayer.first_name} {selectedPlayer.second_name} - Form
+                    </h3>
+                    <PlayerFormChart player={selectedPlayer} />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-purple-200">
+                  Select a player to view stats and form chart
+                </div>
+              )}
             </div>
           </div>
 
