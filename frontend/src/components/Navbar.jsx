@@ -23,6 +23,7 @@ const Navbar = ({ currentPage = "home" }) => {
 
   return (
     <nav className="relative z-10 px-6 py-6 bg-slate-900/50 backdrop-blur-sm border-b border-white/10">
+      
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <div 
           className="flex items-center space-x-2 cursor-pointer hover:scale-105 transition-transform duration-200"
