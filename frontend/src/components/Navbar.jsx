@@ -1,62 +1,48 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Trophy, LogIn, UserPlus, BarChart3, Home, User, LogOut } from 'lucide-react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Trophy,
+  LogIn,
+  UserPlus,
+  BarChart3,
+  Home,
+  User,
+  LogOut,
+} from "lucide-react";
+import axios from "axios";
 
-const Navbar = ({ currentPage = "home" }) => {
+const Navbar = ({ currentPage = "home", isAuth, setIsAuth }) => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Check if user is logged in on component mount
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token); // converts to boolean
-  }, []);
-
-  const handleLogin = () => {
-    navigate('/login');
-  };
-
-  const handleRegister = () => {
-    navigate('/register');
-  };
 
   const handleLogout = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    
-    // Call backend to revoke token
-    await axios.post(
-      'http://localhost:8000/api/logout',
-      {},
-      {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post("http://localhost:8000/api/logout", {}, {
         headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-  } catch (error) {
-    console.error("Logout error:", error);
-    // Continue with logout even if API call fails
-  } finally {
-    // Always remove token and redirect
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
-    navigate('/login');
-  }
-};
-
-  const handleNavigation = (page) => {
-    if (page === 'home') {
-      navigate('/');
-    } else {
-      navigate(`/${page}`);
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("token");
+      setIsAuth(false);
+      navigate("/login");
     }
   };
 
+  const handleNavigation = (page) => {
+    navigate(page === "home" ? "/" : `/${page}`);
+  };
+
+  // Common button style
+  const buttonClass = "flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 text-white hover:text-purple-200 hover:bg-purple-800/30";
+
   return (
-    <nav className="relative z-10 px-6 py-6 bg-slate-900/50 backdrop-blur-sm border-b border-white/10">
+    <nav className="relative z-10 px-6 py-6 bg-gradient-to-r from-purple-700 to-purple-500 backdrop-blur-sm border-b border-white/10">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <div 
+        {/* Logo */}
+        <div
           className="flex items-center space-x-2 cursor-pointer hover:scale-105 transition-transform duration-200"
-          onClick={() => handleNavigation('home')}
+          onClick={() => handleNavigation("home")}
         >
           <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-lg flex items-center justify-center">
             <Trophy className="w-6 h-6 text-white" />
@@ -66,66 +52,56 @@ const Navbar = ({ currentPage = "home" }) => {
           </span>
         </div>
 
+        {/* Main navigation */}
         <div className="hidden md:flex items-center space-x-6">
-          <button 
-            onClick={() => handleNavigation('home')}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-              currentPage === 'home' 
-                ? 'text-purple-400 bg-white/10' 
-                : 'text-gray-300 hover:text-white hover:bg-white/5'
-            }`}
+          <button
+            onClick={() => handleNavigation("home")}
+            className={`${buttonClass} ${currentPage === "home" ? "bg-purple-800/20 text-purple-200" : ""}`}
           >
             <Home className="w-4 h-4" />
             <span>Home</span>
           </button>
-          
-          <button 
-            onClick={() => handleNavigation('analytics')}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-              currentPage === 'analytics' 
-                ? 'text-purple-400 bg-white/10' 
-                : 'text-gray-300 hover:text-white hover:bg-white/5'
-            }`}
+
+          <button
+            onClick={() => handleNavigation("analytics")}
+            className={`${buttonClass} ${currentPage === "analytics" ? "bg-purple-800/20 text-purple-200" : ""}`}
           >
             <BarChart3 className="w-4 h-4" />
             <span>Analytics</span>
           </button>
 
-          <button 
-            onClick={() => handleNavigation('dashboard')}
-            className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-all duration-200 ${
-              currentPage === 'dashboard' 
-                ? 'text-purple-400 bg-white/10' 
-                : 'text-gray-300 hover:text-white hover:bg-white/5'
-            }`}
+          <button
+            onClick={() => handleNavigation("dashboard")}
+            className={`${buttonClass} ${currentPage === "dashboard" ? "bg-purple-800/20 text-purple-200" : ""}`}
           >
             <User className="w-4 h-4" />
             <span>Dashboard</span>
           </button>
         </div>
-        
+
+        {/* Authentication buttons */}
         <div className="flex items-center space-x-4">
-          {!isLoggedIn ? (
+          {!isAuth ? (
             <>
-              <button 
-                onClick={handleLogin}
-                className="flex items-center space-x-2 text-gray-300 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300"
+              <button
+                onClick={() => navigate("/login")}
+                className={`${buttonClass}`}
               >
                 <LogIn className="w-4 h-4" />
                 <span className="hidden sm:block">Login</span>
               </button>
-              <button 
-                onClick={handleRegister}
-                className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-cyan-600 px-4 sm:px-6 py-2 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105"
+              <button
+                onClick={() => navigate("/register")}
+                className={`${buttonClass} bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500`}
               >
                 <UserPlus className="w-4 h-4" />
                 <span className="hidden sm:block">Register</span>
               </button>
             </>
           ) : (
-            <button 
+            <button
               onClick={handleLogout}
-              className="flex items-center space-x-2 bg-gradient-to-r from-red-600 to-red-500 px-4 sm:px-6 py-2 rounded-lg hover:from-red-700 hover:to-red-600 transition-all duration-300 transform hover:scale-105"
+              className={`${buttonClass} bg-gradient-to-r from-purple-600 to-purple-400 hover:from-purple-700 hover:to-purple-500`}
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:block">Logout</span>

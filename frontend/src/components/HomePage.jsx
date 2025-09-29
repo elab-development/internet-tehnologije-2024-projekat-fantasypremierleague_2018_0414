@@ -16,7 +16,7 @@ const HomePage = () => {
         <div className="absolute top-40 right-20 w-64 h-64 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse delay-1000"></div>
       </div>
 
-      <Navbar currentPage="home" />
+      {/*<Navbar currentPage="home" />*/}
 
       <main className="relative z-10 px-6 py-20">
         <div className="max-w-6xl mx-auto">

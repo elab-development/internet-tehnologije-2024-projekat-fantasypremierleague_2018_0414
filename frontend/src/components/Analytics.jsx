@@ -11,7 +11,7 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-purple-950 text-white">
       {/* Navbar */}
-      <Navbar currentPage="analytics" />
+     {/*<Navbar currentPage="analytics" />*/} 
 
       {/* Main Content */}
       <main className="p-6 max-w-7xl mx-auto">

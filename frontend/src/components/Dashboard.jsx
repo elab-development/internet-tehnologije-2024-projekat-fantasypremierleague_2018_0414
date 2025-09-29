@@ -230,7 +230,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-        <Navbar />
+        {/*<Navbar />*/}
         <div className="flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-300 mb-4"></div>
@@ -266,7 +266,7 @@ const Dashboard = () => {
   if (isCreatingTeam || isEditingTeam) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-        <Navbar />
+        {/*<Navbar />*/}
         <div className="p-6">
           {/* Header */}
           <div className="max-w-7xl mx-auto mb-6">
@@ -425,7 +425,7 @@ const Dashboard = () => {
   if (team && !isEditingTeam) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-        <Navbar />
+        {/*<Navbar />*/}
         <div className="p-6">
           {/* Header */}
           <div className="max-w-7xl mx-auto mb-8">
@@ -486,7 +486,7 @@ const Dashboard = () => {
   // No team - show create option
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900">
-      <Navbar />
+       {/*<Navbar />*/}
       <div className="p-6 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 64px)' }}>
         <div className="max-w-2xl text-center">
           <div className="bg-gradient-to-br from-purple-800 to-purple-600 rounded-2xl p-12 shadow-2xl border-2 border-purple-400">

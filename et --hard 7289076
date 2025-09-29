@@ -1,0 +1,34 @@
+[33mfb20200[m[33m ([m[1;36mHEAD -> [m[1;32mfullstack[m[33m, [m[1;31morigin/fullstack[m[33m)[m fix server side logout
+[33m7289076[m add logout in navbar
+[33ma70a986[m change player card poistion names
+[33m61580b2[m fix player adding validation
+[33m21bcaa3[m add navbar to dashboard page
+[33m65ca101[m fix dashboard
+[33ma033506[m add sync api
+[33mde0ecdb[m add dashboard
+[33m3377f45[m add player form chart
+[33mb518b04[m add player form chart
+[33mcf74feb[m fix filtering to work with new data
+[33m540966d[m populate db with real data
+[33m0906533[m add table standings
+[33mc5ae3f3[m add styling to analytics page
+[33meef4a00[m make pagination work on front and back end
+[33m2da9005[m add more filters for search players
+[33m350ad86[m add initial player search
+[33m1ef95e3[m add api for table standings
+[33m918d341[m add pagination and filter
+[33m6b04c02[m add factories and seeders
+[33m580d5fe[m add login form
+[33mac03431[m add navbar and homepage
+[33m2819a6a[m fix player card css
+[33me18405e[m add player card ant its styling
+[33mdfdc63d[m Reorganize project: move backend and front in separate folders
+[33m15df68e[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m add authentication and authorization(via tokens)
+[33mc4e5d79[m fix migration problem
+[33m9521eda[m add foreign key to player table
+[33mf68ce24[m add new table clubs
+[33mad21c1f[m add RouteServiceProvider and some basic endpoints
+[33m53144a5[m add initial db schema
+[33m0680b0f[m inital Laravel project setup
+[33m41f6c74[m Setting up GitHub Classroom Feedback
+[33m7296ba3[m[33m ([m[1;31morigin/feedback[m[33m)[m GitHub Classroom Feedback
