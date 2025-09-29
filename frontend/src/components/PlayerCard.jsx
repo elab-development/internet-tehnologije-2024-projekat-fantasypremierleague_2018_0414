@@ -32,7 +32,7 @@ const style = positionStyles[player.position] || positionStyles.MID;
 
         <h3 className="text-sm font-medium text-gray-900 text-center leading-tight">
           {player.first_name} {player.second_name}
-        </h3>
+        </h3>s
       </div>
 
       <div className="px-3 py-2">
