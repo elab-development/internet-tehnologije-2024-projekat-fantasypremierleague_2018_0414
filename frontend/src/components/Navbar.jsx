@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, LogIn, UserPlus, BarChart3, Home, User } from 'lucide-react';
+import { Trophy, LogIn, UserPlus, BarChart3, Home, User, LogOut } from 'lucide-react';
 
 const Navbar = ({ currentPage = "home" }) => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is logged in on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token); // converts to boolean
+  }, []);
 
   const handleLogin = () => {
     navigate('/login');
@@ -12,6 +19,29 @@ const Navbar = ({ currentPage = "home" }) => {
   const handleRegister = () => {
     navigate('/register');
   };
+
+  const handleLogout = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    // Call backend to revoke token
+    await axios.post(
+      'http://localhost:8000/api/logout',
+      {},
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Continue with logout even if API call fails
+  } finally {
+    // Always remove token and redirect
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    navigate('/login');
+  }
+};
 
   const handleNavigation = (page) => {
     if (page === 'home') {
@@ -23,7 +53,6 @@ const Navbar = ({ currentPage = "home" }) => {
 
   return (
     <nav className="relative z-10 px-6 py-6 bg-slate-900/50 backdrop-blur-sm border-b border-white/10">
-      
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         <div 
           className="flex items-center space-x-2 cursor-pointer hover:scale-105 transition-transform duration-200"
@@ -76,24 +105,36 @@ const Navbar = ({ currentPage = "home" }) => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button 
-            onClick={handleLogin}
-            className="flex items-center space-x-2 text-gray-300 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300"
-          >
-            <LogIn className="w-4 h-4" />
-            <span className="hidden sm:block">Login</span>
-          </button>
-          <button 
-            onClick={handleRegister}
-            className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-cyan-600 px-4 sm:px-6 py-2 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span className="hidden sm:block">Register</span>
-          </button>
+          {!isLoggedIn ? (
+            <>
+              <button 
+                onClick={handleLogin}
+                className="flex items-center space-x-2 text-gray-300 hover:text-white px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300"
+              >
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:block">Login</span>
+              </button>
+              <button 
+                onClick={handleRegister}
+                className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-cyan-600 px-4 sm:px-6 py-2 rounded-lg hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:block">Register</span>
+              </button>
+            </>
+          ) : (
+            <button 
+              onClick={handleLogout}
+              className="flex items-center space-x-2 bg-gradient-to-r from-red-600 to-red-500 px-4 sm:px-6 py-2 rounded-lg hover:from-red-700 hover:to-red-600 transition-all duration-300 transform hover:scale-105"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:block">Logout</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>
-    );
+  );
 };
 
 export default Navbar;
