@@ -10,7 +10,9 @@ class TeamController extends Controller
     // Show only the logged-in user's team(s)
     public function index(Request $request)
     {
-        $teams = Team::where('user_id', $request->user()->id)->get();
+        $teams = Team::where('user_id', $request->user()->id)
+            ->with('players')
+            ->get();
         return response()->json($teams, 200);
     }
 
@@ -114,6 +116,35 @@ class TeamController extends Controller
             'message' => 'Player removed',
             'team' => $team->load('players')
         ], 200);
+    }
+
+
+    public function syncPlayers(Request $request, Team $team)
+    {
+        // Check authorization
+        if ($team->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'player_ids' => 'required|array|size:11',
+            'player_ids.*' => 'required|exists:players,id',
+        ]);
+
+        // Sync players (removes old, adds new in one command)
+        $team->players()->sync($validated['player_ids']);
+
+        return response()->json([
+            'message' => 'Team updated successfully',
+            'team' => $team->load('players')
+        ], 200);
+    }
+
+    // View players of a specific team (public)
+    public function players(Team $team)
+    {
+        $players = $team->players; // Assuming 'players' is the relationship method in Team model
+        return response()->json($players, 200);
     }
 
 }

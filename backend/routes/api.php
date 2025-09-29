@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Add/remove players from a team
     Route::post('teams/{team}/add-player', [TeamController::class, 'addPlayer']);
     Route::delete('teams/{team}/remove-player/{player}', [TeamController::class, 'removePlayer']);
+    Route::put('teams/{team}/sync-players', [TeamController::class, 'syncPlayers']);
 
     // Logout
     Route::post('logout', [AuthController::class, 'logout']);

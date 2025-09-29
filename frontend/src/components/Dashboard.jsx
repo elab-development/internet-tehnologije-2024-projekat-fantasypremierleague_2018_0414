@@ -8,9 +8,16 @@ const Dashboard = () => {
   const [team, setTeam] = useState(null);
   const [availablePlayers, setAvailablePlayers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
+  const [isEditingTeam, setIsEditingTeam] = useState(false);
+  
+  // Team creation/editing state
+  const [teamName, setTeamName] = useState("");
+  const [budget, setBudget] = useState("100");
+  const [selectedPlayers, setSelectedPlayers] = useState([]);
+  const [showNameModal, setShowNameModal] = useState(false);
 
   const token = localStorage.getItem("token");
-
   const config = {
     headers: { Authorization: `Bearer ${token}` },
   };
@@ -19,7 +26,11 @@ const Dashboard = () => {
   const fetchTeam = useCallback(async () => {
     try {
       const res = await axios.get(`${API_BASE}/teams`, config);
-      setTeam(res.data[0] || null);
+      const userTeam = res.data[0] || null;
+      setTeam(userTeam);
+      if (userTeam && userTeam.players) {
+        setSelectedPlayers(userTeam.players);
+      }
       setLoading(false);
     } catch (err) {
       console.error(err);
@@ -27,7 +38,7 @@ const Dashboard = () => {
     }
   }, [token]);
 
-  // Fetch all available players for adding
+  // Fetch all available players
   const fetchPlayers = useCallback(async () => {
     try {
       const res = await axios.get(`${API_BASE}/players`);
@@ -42,182 +53,455 @@ const Dashboard = () => {
     fetchPlayers();
   }, [fetchTeam, fetchPlayers]);
 
-  // Add a player
-   // Add a player
-  const addPlayer = async (playerId) => {
-    try {
-      console.log("Adding player:", playerId, "to team:", team.id);
-      console.log("Request payload:", { player_id: playerId });
-      const response = await axios.post(
-        `${API_BASE}/teams/${team.id}/add-player`,
-        { player_id: playerId },
-        config
-      );
-      console.log("Success:", response.data);
-      fetchTeam();
-    } catch (err) {
-      console.error("Error details:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
-      alert(`Failed to add player: ${err.response?.data?.message || err.response?.data?.detail || err.message}`);
-    }
+  // Add player to selected
+  const addPlayerToTeam = (player) => {
+    setSelectedPlayers([...selectedPlayers, player]);
   };
 
-  // Remove a player
-  const removePlayer = async (playerId) => {
-    try {
-      await axios.delete(
-        `${API_BASE}/teams/${team.id}/remove-player/${playerId}`,
-        config
-      );
-      fetchTeam();
-    } catch (err) {
-      console.error(err);
-    }
+  // Remove player from selected
+  const removePlayerFromTeam = (playerId) => {
+    setSelectedPlayers(selectedPlayers.filter(p => p.id !== playerId));
   };
 
-  // Create a team
-  const [teamName, setTeamName] = useState("");
-  const [budget, setBudget] = useState("");
+  // Check if formation is valid
+  const getFormationStatus = () => {
+    const positions = {
+      Goalkeeper: 0,
+      Defender: 0,
+      Midfielder: 0,
+      Forward: 0,
+    };
+    
+    selectedPlayers.forEach(p => {
+      if (positions[p.position] !== undefined) {
+        positions[p.position]++;
+      }
+    });
 
-  const handleCreateTeam = async (e) => {
+    const isValid = 
+      positions.Goalkeeper === 1 &&
+      positions.Defender === 4 &&
+      positions.Midfielder === 4 &&
+      positions.Forward === 2;
+
+    return {
+      isValid,
+      current: positions,
+      needed: {
+        Goalkeeper: 1 - positions.Goalkeeper,
+        Defender: 4 - positions.Defender,
+        Midfielder: 4 - positions.Midfielder,
+        Forward: 2 - positions.Forward,
+      }
+    };
+  };
+
+  const formationStatus = getFormationStatus();
+
+  // Start creating team
+  const handleStartCreateTeam = () => {
+    setShowNameModal(true);
+  };
+
+  // After entering name/budget, start player selection
+  const handleNameSubmit = (e) => {
     e.preventDefault();
     if (!teamName.trim()) return alert("Team name required!");
+    setShowNameModal(false);
+    setIsCreatingTeam(true);
+    setSelectedPlayers([]);
+  };
+
+  // Save team (create or update)
+  const handleSaveTeam = async () => {
+    if (!formationStatus.isValid) {
+      return alert("You need exactly 1 GK, 4 DEF, 4 MID, 2 FWD!");
+    }
+
     try {
-      await axios.post(
-        `${API_BASE}/teams`,
-        { name: teamName, budget: budget ? parseInt(budget) : undefined },
-        config
-      );
-      setTeamName("");
-      setBudget("");
+      const playerIds = selectedPlayers.map(p => p.id);
+
+      if (team) {
+        // Update existing team using sync
+        await axios.put(
+          `${API_BASE}/teams/${team.id}/sync-players`,
+          { player_ids: playerIds },
+          config
+        );
+        
+        setIsEditingTeam(false);
+        alert("Team updated successfully!");
+      } else {
+        // Create new team
+        const teamRes = await axios.post(
+          `${API_BASE}/teams`,
+          { name: teamName, budget: parseInt(budget) },
+          config
+        );
+        
+        const newTeam = teamRes.data;
+        
+        // Sync players with new team
+        await axios.put(
+          `${API_BASE}/teams/${newTeam.id}/sync-players`,
+          { player_ids: playerIds },
+          config
+        );
+        
+        setIsCreatingTeam(false);
+        alert("Team created successfully!");
+      }
+      
       fetchTeam();
     } catch (err) {
-      alert("Failed to create team.");
       console.error(err);
+      alert("Failed to save team: " + (err.response?.data?.error || err.message));
     }
   };
 
-  if (loading) return <div className="text-purple-300 text-center mt-10">Loading...</div>;
+  // Cancel team creation/editing
+  const handleCancel = () => {
+    setIsCreatingTeam(false);
+    setIsEditingTeam(false);
+    setSelectedPlayers(team?.players || []);
+    setTeamName("");
+    setBudget("100");
+  };
 
-  if (!team)
+  // Start editing existing team
+  const handleEditTeam = () => {
+    setIsEditingTeam(true);
+    setSelectedPlayers(team.players || []);
+  };
+
+  if (loading) {
     return (
-      <div className="max-w-md mx-auto mt-10 bg-gradient-to-br from-purple-900 via-purple-800 to-purple-700 p-8 rounded-lg shadow-lg text-white">
-        <h2 className="text-2xl font-bold mb-4 text-center">Create Your Team</h2>
-        <form onSubmit={handleCreateTeam}>
-          <input
-            type="text"
-            value={teamName}
-            onChange={(e) => setTeamName(e.target.value)}
-            placeholder="Team Name"
-            className="px-3 py-2 rounded w-full mb-4 text-black"
-          />
-          <input
-            type="number"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            placeholder="Budget (optional)"
-            className="px-3 py-2 rounded w-full mb-4 text-black"
-          />
-          <button
-            type="submit"
-            className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 w-full font-semibold"
-          >
-            Create Team
-          </button>
-        </form>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-300 mb-4"></div>
+          <p className="text-purple-200 text-xl">Loading your team...</p>
+        </div>
       </div>
     );
+  }
 
-  // Group players by position for pitch layout
+  // Group players by position for pitch
   const positions = {
     Goalkeeper: [],
     Defender: [],
     Midfielder: [],
     Forward: [],
   };
-  team.players?.forEach((player) => {
+  selectedPlayers.forEach((player) => {
     if (positions[player.position]) {
       positions[player.position].push(player);
     }
   });
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-purple-700 p-6">
-      <h1 className="text-3xl font-bold text-white mb-6 text-center">{team.name}'s Team</h1>
+  // Filter available players (exclude selected)
+  const availableToAdd = availablePlayers.filter(
+    p => !selectedPlayers.some(sp => sp.id === p.id)
+  );
 
-      {/* Football Pitch */}
-      <div className="bg-gradient-to-br from-purple-800 via-purple-700 to-purple-600 rounded-lg p-8 mb-8 mx-auto max-w-4xl shadow-lg border-8 border-purple-900">
-        <h2 className="text-xl font-semibold text-white mb-4 text-center">Football Pitch</h2>
-        <div className="flex flex-col gap-8">
-          {/* Goalkeeper */}
-          <div className="flex justify-center">
-            {positions.Goalkeeper.map((player) => (
-              <PlayerCard key={player.id} player={player} />
-            ))}
-          </div>
-          {/* Defenders */}
-          <div className="flex justify-around">
-            {positions.Defender.map((player) => (
-              <PlayerCard key={player.id} player={player} />
-            ))}
-          </div>
-          {/* Midfielders */}
-          <div className="flex justify-around">
-            {positions.Midfielder.map((player) => (
-              <PlayerCard key={player.id} player={player} />
-            ))}
-          </div>
-          {/* Forwards */}
-          <div className="flex justify-center gap-8">
-            {positions.Forward.map((player) => (
-              <PlayerCard key={player.id} player={player} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Add players */}
-      <div className="bg-purple-800 rounded-lg p-6 max-w-4xl mx-auto shadow-lg">
-        <h2 className="text-xl font-semibold text-white mb-4">Add Players</h2>
-        <div className="grid grid-cols-4 gap-4">
-          {availablePlayers
-            .filter((p) => !team.players?.some((tp) => tp.id === p.id))
-            .map((player) => (
-              <div key={player.id} className="flex flex-col items-center">
-                <PlayerCard player={player} />
+  // Show create/edit interface
+  if (isCreatingTeam || isEditingTeam) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <div className="bg-gradient-to-r from-purple-800 to-purple-600 rounded-2xl shadow-2xl p-6 border-2 border-purple-400">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">
+                  {isCreatingTeam ? `Create Team: ${teamName}` : `Edit Team: ${team.name}`}
+                </h1>
+                <p className="text-purple-200 text-lg">
+                  Players Selected: <span className="font-bold text-white">{selectedPlayers.length}/11</span>
+                  {!formationStatus.isValid && (
+                    <span className="ml-4 text-yellow-300">
+                      Need: {formationStatus.needed.Goalkeeper > 0 && `${formationStatus.needed.Goalkeeper} GK `}
+                      {formationStatus.needed.Defender > 0 && `${formationStatus.needed.Defender} DEF `}
+                      {formationStatus.needed.Midfielder > 0 && `${formationStatus.needed.Midfielder} MID `}
+                      {formationStatus.needed.Forward > 0 && `${formationStatus.needed.Forward} FWD`}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex gap-3">
                 <button
-                  className="mt-2 bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600"
-                  onClick={() => addPlayer(player.id)}
+                  onClick={handleCancel}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all"
                 >
-                  Add
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveTeam}
+                  disabled={!formationStatus.isValid}
+                  className={`px-6 py-3 rounded-lg font-semibold shadow-lg transition-all ${
+                    formationStatus.isValid
+                      ? 'bg-green-500 hover:bg-green-600 text-white transform hover:scale-105'
+                      : 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                  }`}
+                >
+                  Save Team
                 </button>
               </div>
-            ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Football Pitch */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-8 shadow-2xl border-4 border-white relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white"></div>
+              <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-white rounded-full"></div>
+            </div>
+
+            <div className="relative z-10">
+              <h2 className="text-3xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                Your Squad (1-4-4-2)
+              </h2>
+              <div className="flex flex-col gap-8">
+                {/* Goalkeeper */}
+                <div className="flex justify-center gap-4">
+                  {positions.Goalkeeper.map((player) => (
+                    <div key={player.id} className="relative">
+                      <PlayerCard player={player} />
+                      <button
+                        onClick={() => removePlayerFromTeam(player.id)}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-colors shadow-lg z-10"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {positions.Goalkeeper.length === 0 && (
+                    <div className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
+                      <p className="text-lg font-semibold">Goalkeeper (0/1)</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Defenders */}
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {positions.Defender.map((player) => (
+                    <div key={player.id} className="relative">
+                      <PlayerCard player={player} />
+                      <button
+                        onClick={() => removePlayerFromTeam(player.id)}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-colors shadow-lg z-10"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {[...Array(4 - positions.Defender.length)].map((_, i) => (
+                    <div key={`def-empty-${i}`} className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
+                      <p className="text-sm font-semibold">Defender</p>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Midfielders */}
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {positions.Midfielder.map((player) => (
+                    <div key={player.id} className="relative">
+                      <PlayerCard player={player} />
+                      <button
+                        onClick={() => removePlayerFromTeam(player.id)}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-colors shadow-lg z-10"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {[...Array(4 - positions.Midfielder.length)].map((_, i) => (
+                    <div key={`mid-empty-${i}`} className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
+                      <p className="text-sm font-semibold">Midfielder</p>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Forwards */}
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {positions.Forward.map((player) => (
+                    <div key={player.id} className="relative">
+                      <PlayerCard player={player} />
+                      <button
+                        onClick={() => removePlayerFromTeam(player.id)}
+                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold transition-colors shadow-lg z-10"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {[...Array(2 - positions.Forward.length)].map((_, i) => (
+                    <div key={`fwd-empty-${i}`} className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
+                      <p className="text-sm font-semibold">Forward</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Available Players */}
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-purple-800 rounded-2xl p-6 shadow-2xl border-2 border-purple-400">
+            <h2 className="text-3xl font-bold text-white mb-6">Available Players - Click to Add</h2>
+            
+            {/* Filter by position */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map(position => (
+                <div key={position}>
+                  <h3 className="text-xl font-bold text-purple-200 mb-3">{position}s</h3>
+                  <div className="space-y-3">
+                    {availableToAdd
+                      .filter(p => p.position === position)
+                      .map(player => (
+                        <div key={player.id} className="cursor-pointer" onClick={() => addPlayerToTeam(player)}>
+                          <PlayerCard player={player} />
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main view - Team exists and not editing
+  if (team && !isEditingTeam) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6">
+        {/* Header */}
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="bg-gradient-to-r from-purple-800 to-purple-600 rounded-2xl shadow-2xl p-6 border-2 border-purple-400">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">{team.name}</h1>
+                <p className="text-purple-200 text-lg">
+                  Budget: <span className="font-bold text-white">${team.budget}M</span> | 
+                  <span className="ml-2">Players: <span className="font-bold text-white">{team.players?.length || 0}</span></span>
+                </p>
+              </div>
+              <button
+                onClick={handleEditTeam}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all transform hover:scale-105"
+              >
+                Edit Team
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Football Pitch */}
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-8 shadow-2xl border-4 border-white relative overflow-hidden">
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white"></div>
+              <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border-2 border-white rounded-full"></div>
+            </div>
+
+            <div className="relative z-10">
+              <h2 className="text-3xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                Your Squad
+              </h2>
+              <div className="flex flex-col gap-8">
+                <div className="flex justify-center gap-4">
+                  {positions.Goalkeeper.map(player => <PlayerCard key={player.id} player={player} />)}
+                </div>
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {positions.Defender.map(player => <PlayerCard key={player.id} player={player} />)}
+                </div>
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {positions.Midfielder.map(player => <PlayerCard key={player.id} player={player} />)}
+                </div>
+                <div className="flex justify-center gap-4 flex-wrap">
+                  {positions.Forward.map(player => <PlayerCard key={player.id} player={player} />)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No team - show create option
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-6 flex items-center justify-center">
+      <div className="max-w-2xl text-center">
+        <div className="bg-gradient-to-br from-purple-800 to-purple-600 rounded-2xl p-12 shadow-2xl border-2 border-purple-400">
+          <div className="mb-6">
+            <svg className="w-24 h-24 mx-auto text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-4">No Team Yet</h2>
+          <p className="text-purple-200 mb-6 text-lg">Create your fantasy football team and start building your dream squad!</p>
+          <button
+            onClick={handleStartCreateTeam}
+            className="bg-green-500 hover:bg-green-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl transition-all transform hover:scale-105"
+          >
+            Create Your Team
+          </button>
         </div>
       </div>
 
-      {/* Remove players */}
-      <div className="bg-purple-800 rounded-lg p-6 max-w-4xl mx-auto mt-6 shadow-lg">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          Remove Players
-        </h2>
-        <div className="grid grid-cols-4 gap-4">
-          {team.players?.map((player) => (
-            <div key={player.id} className="flex flex-col items-center">
-              <PlayerCard player={player} />
-              <button
-                className="mt-2 bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                onClick={() => removePlayer(player.id)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+      {/* Name Modal */}
+      {showNameModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-purple-800 to-purple-600 rounded-2xl p-8 max-w-md w-full shadow-2xl border-2 border-purple-400">
+            <h2 className="text-3xl font-bold text-white mb-6">Create Team</h2>
+            <form onSubmit={handleNameSubmit}>
+              <div className="mb-4">
+                <label className="block text-purple-200 mb-2 font-semibold">Team Name</label>
+                <input
+                  type="text"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  placeholder="Enter team name"
+                  className="px-4 py-3 rounded-lg w-full text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  required
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-purple-200 mb-2 font-semibold">Budget (millions)</label>
+                <input
+                  type="number"
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  placeholder="100"
+                  className="px-4 py-3 rounded-lg w-full text-gray-900 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNameModal(false)}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors shadow-lg"
+                >
+                  Next: Select Players
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -7,7 +7,7 @@ function LoginPage() {
       const response = await axios.post('http://localhost:8000/api/login', formData);
       const { token } = response.data;
       localStorage.setItem('token', token);
-      navigate('/dashboard');
+      navigate('/home');
     } catch (error) {
       alert('Login failed: ' + (error.response?.data?.message || error.message));
     }
