@@ -2,14 +2,13 @@ import React from 'react';
 
 const PlayerCard = ({ player }) => {
   const positionStyles = {
-    Goalkeeper: { bg: 'bg-yellow-300', text: 'text-black', short: 'GKP' },
-    Defender: { bg: 'bg-yellow-400', text: 'text-black', short: 'DEF' },
-    Midfielder: { bg: 'bg-green-400', text: 'text-white', short: 'MID' },
-    Forward: { bg: 'bg-red-400', text: 'text-white', short: 'FWD' }
-  };
+    GKP: { bg: 'bg-yellow-300', text: 'text-black', short: 'GKP' },
+    DEF: { bg: 'bg-blue-400', text: 'text-white', short: 'DEF' },
+    MID: { bg: 'bg-green-400', text: 'text-white', short: 'MID' },
+    FWD: { bg: 'bg-red-400', text: 'text-white', short: 'FWD' }
+};
 
-
-  const style = positionStyles[player.position] || positionStyles.Midfielder;
+const style = positionStyles[player.position] || positionStyles.MID;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg w-48 shadow-sm hover:shadow-md transition-shadow duration-200">

@@ -60,8 +60,61 @@ const Dashboard = () => {
     fetchPlayers();
   }, [fetchTeam, fetchPlayers]);
 
-  // Add player to selected
+  // Get current position counts
+  const getPositionCounts = (players) => {
+    const counts = {
+      GKP: 0,
+      DEF: 0,
+      MID: 0,
+      FWD: 0,
+    };
+    
+    if (players && Array.isArray(players)) {
+      players.forEach(p => {
+        if (counts[p.position] !== undefined) {
+          counts[p.position]++;
+        }
+      });
+    }
+    
+    return counts;
+  };
+
+  // Add player to selected with validation
   const addPlayerToTeam = (player) => {
+    const positionLimits = {
+      GKP: 1,
+      DEF: 4,
+      MID: 4,
+      FWD: 2,
+    };
+
+    const currentCounts = getPositionCounts(selectedPlayers);
+    
+    // Check if we can add this position
+    if (currentCounts[player.position] >= positionLimits[player.position]) {
+      const positionNames = {
+        GKP: "Goalkeeper",
+        DEF: "Defenders",
+        MID: "Midfielders",
+        FWD: "Forwards"
+      };
+      alert(`You can only have ${positionLimits[player.position]} ${positionNames[player.position]}!`);
+      return;
+    }
+
+    // Check if player already selected
+    if (selectedPlayers.some(p => p.id === player.id)) {
+      alert("Player already in your squad!");
+      return;
+    }
+
+    // Check total squad size
+    if (selectedPlayers.length >= 11) {
+      alert("Your squad is full (11 players)!");
+      return;
+    }
+
     setSelectedPlayers([...selectedPlayers, player]);
   };
 
@@ -72,20 +125,7 @@ const Dashboard = () => {
 
   // Check if formation is valid
   const getFormationStatus = () => {
-    const positionCounts = {
-      GKP: 0,
-      DEF: 0,
-      MID: 0,
-      FWD: 0,
-    };
-    
-    if (selectedPlayers && Array.isArray(selectedPlayers)) {
-      selectedPlayers.forEach(p => {
-        if (positionCounts[p.position] !== undefined) {
-          positionCounts[p.position]++;
-        }
-      });
-    }
+    const positionCounts = getPositionCounts(selectedPlayers);
 
     const isValid = 
       positionCounts.GKP === 1 &&
