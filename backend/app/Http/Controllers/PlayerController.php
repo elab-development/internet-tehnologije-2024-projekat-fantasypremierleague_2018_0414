@@ -83,37 +83,43 @@ class PlayerController extends Controller
     }
 
 
- public function index(Request $request)
-{
-    $query = Player::query();
+    public function index(Request $request)
+    {
+        $query = Player::query();
 
-    // Search by first_name or second_name
-    if ($request->has('name') && $request->name !== '') {
-        $query->where(function($q) use ($request) {
-            $q->where('first_name', 'like', '%' . $request->name . '%')
-              ->orWhere('second_name', 'like', '%' . $request->name . '%');
-        });
+        // Search by first_name or second_name
+        if ($request->has('name') && $request->name !== '') {
+            $query->where(function ($q) use ($request) {
+                $q->where('first_name', 'like', '%' . $request->name . '%')
+                    ->orWhere('second_name', 'like', '%' . $request->name . '%');
+            });
+        }
+
+        // Filter by position (GKP, DEF, MID, FWD)
+        if ($request->has('position') && $request->position !== '') {
+            $query->where('position', $request->position);
+        }
+
+        // Filter by club name
+        if ($request->has('club') && $request->club !== '') {
+            $clubName = $request->club;
+            $query->whereHas('club', function ($q) use ($clubName) {
+                $q->where('name', 'like', '%' . $clubName . '%');
+            });
+        }
+
+        // If 'all' param is set, return all players without pagination
+        if ($request->has('all')) {
+            $players = $query->with('club')->get();
+            return response()->json(['data' => $players]);
+        }
+
+        $perPage = $request->get('per_page', 10);
+
+        // Eager load club info
+        $players = $query->with('club')->paginate($perPage)->withPath('/api/players');
+
+        return response()->json($players);
     }
-
-    // Filter by position (GKP, DEF, MID, FWD)
-    if ($request->has('position') && $request->position !== '') {
-        $query->where('position', $request->position);
-    }
-
-    // Filter by club name
-    if ($request->has('club') && $request->club !== '') {
-        $clubName = $request->club;
-        $query->whereHas('club', function($q) use ($clubName) {
-            $q->where('name', 'like', '%' . $clubName . '%');
-        });
-    }
-
-    $perPage = $request->get('per_page', 10);
-
-    // Eager load club info
-    $players = $query->with('club')->paginate($perPage)->withPath('/api/players');
-
-    return response()->json($players);
-}
 
 }

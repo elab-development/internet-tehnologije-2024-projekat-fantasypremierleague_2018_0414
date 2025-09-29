@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import PlayerCard from "./PlayerCard";
+import PlayerSearch from "./PlayerSearch";
 
 const API_BASE = "http://localhost:8000/api";
 
@@ -17,14 +18,13 @@ const Dashboard = () => {
   const [selectedPlayers, setSelectedPlayers] = useState([]);
   const [showNameModal, setShowNameModal] = useState(false);
 
-  const token = localStorage.getItem("token");
-  const config = {
-    headers: { Authorization: `Bearer ${token}` },
-  };
-
   // Fetch the user's team
   const fetchTeam = useCallback(async () => {
     try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
       const res = await axios.get(`${API_BASE}/teams`, config);
       const userTeam = res.data[0] || null;
       setTeam(userTeam);
@@ -36,15 +36,21 @@ const Dashboard = () => {
       console.error(err);
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   // Fetch all available players
   const fetchPlayers = useCallback(async () => {
     try {
-      const res = await axios.get(`${API_BASE}/players`);
-      setAvailablePlayers(res.data.data);
+      const res = await axios.get(`${API_BASE}/players?all=true`);
+      console.log("Players API response:", res.data);
+      
+      // Check if data is in res.data.data or just res.data
+      const players = res.data.data || res.data;
+      console.log("Players array:", players);
+      
+      setAvailablePlayers(players);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching players:", err);
     }
   }, []);
 
@@ -65,33 +71,35 @@ const Dashboard = () => {
 
   // Check if formation is valid
   const getFormationStatus = () => {
-    const positions = {
-      Goalkeeper: 0,
-      Defender: 0,
-      Midfielder: 0,
-      Forward: 0,
+    const positionCounts = {
+      GKP: 0,
+      DEF: 0,
+      MID: 0,
+      FWD: 0,
     };
     
-    selectedPlayers.forEach(p => {
-      if (positions[p.position] !== undefined) {
-        positions[p.position]++;
-      }
-    });
+    if (selectedPlayers && Array.isArray(selectedPlayers)) {
+      selectedPlayers.forEach(p => {
+        if (positionCounts[p.position] !== undefined) {
+          positionCounts[p.position]++;
+        }
+      });
+    }
 
     const isValid = 
-      positions.Goalkeeper === 1 &&
-      positions.Defender === 4 &&
-      positions.Midfielder === 4 &&
-      positions.Forward === 2;
+      positionCounts.GKP === 1 &&
+      positionCounts.DEF === 4 &&
+      positionCounts.MID === 4 &&
+      positionCounts.FWD === 2;
 
     return {
       isValid,
-      current: positions,
+      current: positionCounts,
       needed: {
-        Goalkeeper: 1 - positions.Goalkeeper,
-        Defender: 4 - positions.Defender,
-        Midfielder: 4 - positions.Midfielder,
-        Forward: 2 - positions.Forward,
+        GKP: 1 - positionCounts.GKP,
+        DEF: 4 - positionCounts.DEF,
+        MID: 4 - positionCounts.MID,
+        FWD: 2 - positionCounts.FWD,
       }
     };
   };
@@ -119,6 +127,10 @@ const Dashboard = () => {
     }
 
     try {
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: { Authorization: `Bearer ${token}` },
+      };
       const playerIds = selectedPlayers.map(p => p.id);
 
       if (team) {
@@ -187,16 +199,19 @@ const Dashboard = () => {
 
   // Group players by position for pitch
   const positions = {
-    Goalkeeper: [],
-    Defender: [],
-    Midfielder: [],
-    Forward: [],
+    GKP: [],
+    DEF: [],
+    MID: [],
+    FWD: [],
   };
-  selectedPlayers.forEach((player) => {
-    if (positions[player.position]) {
-      positions[player.position].push(player);
-    }
-  });
+  
+  if (selectedPlayers && Array.isArray(selectedPlayers)) {
+    selectedPlayers.forEach((player) => {
+      if (positions[player.position]) {
+        positions[player.position].push(player);
+      }
+    });
+  }
 
   // Filter available players (exclude selected)
   const availableToAdd = availablePlayers.filter(
@@ -219,10 +234,10 @@ const Dashboard = () => {
                   Players Selected: <span className="font-bold text-white">{selectedPlayers.length}/11</span>
                   {!formationStatus.isValid && (
                     <span className="ml-4 text-yellow-300">
-                      Need: {formationStatus.needed.Goalkeeper > 0 && `${formationStatus.needed.Goalkeeper} GK `}
-                      {formationStatus.needed.Defender > 0 && `${formationStatus.needed.Defender} DEF `}
-                      {formationStatus.needed.Midfielder > 0 && `${formationStatus.needed.Midfielder} MID `}
-                      {formationStatus.needed.Forward > 0 && `${formationStatus.needed.Forward} FWD`}
+                      Need: {formationStatus.needed.GKP > 0 && `${formationStatus.needed.GKP} GK `}
+                      {formationStatus.needed.DEF > 0 && `${formationStatus.needed.DEF} DEF `}
+                      {formationStatus.needed.MID > 0 && `${formationStatus.needed.MID} MID `}
+                      {formationStatus.needed.FWD > 0 && `${formationStatus.needed.FWD} FWD`}
                     </span>
                   )}
                 </p>
@@ -266,7 +281,7 @@ const Dashboard = () => {
               <div className="flex flex-col gap-8">
                 {/* Goalkeeper */}
                 <div className="flex justify-center gap-4">
-                  {positions.Goalkeeper.map((player) => (
+                  {positions.GKP.map((player) => (
                     <div key={player.id} className="relative">
                       <PlayerCard player={player} />
                       <button
@@ -277,7 +292,7 @@ const Dashboard = () => {
                       </button>
                     </div>
                   ))}
-                  {positions.Goalkeeper.length === 0 && (
+                  {positions.GKP.length === 0 && (
                     <div className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
                       <p className="text-lg font-semibold">Goalkeeper (0/1)</p>
                     </div>
@@ -286,7 +301,7 @@ const Dashboard = () => {
                 
                 {/* Defenders */}
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {positions.Defender.map((player) => (
+                  {positions.DEF.map((player) => (
                     <div key={player.id} className="relative">
                       <PlayerCard player={player} />
                       <button
@@ -297,7 +312,7 @@ const Dashboard = () => {
                       </button>
                     </div>
                   ))}
-                  {[...Array(4 - positions.Defender.length)].map((_, i) => (
+                  {[...Array(4 - positions.DEF.length)].map((_, i) => (
                     <div key={`def-empty-${i}`} className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
                       <p className="text-sm font-semibold">Defender</p>
                     </div>
@@ -306,7 +321,7 @@ const Dashboard = () => {
                 
                 {/* Midfielders */}
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {positions.Midfielder.map((player) => (
+                  {positions.MID.map((player) => (
                     <div key={player.id} className="relative">
                       <PlayerCard player={player} />
                       <button
@@ -317,7 +332,7 @@ const Dashboard = () => {
                       </button>
                     </div>
                   ))}
-                  {[...Array(4 - positions.Midfielder.length)].map((_, i) => (
+                  {[...Array(4 - positions.MID.length)].map((_, i) => (
                     <div key={`mid-empty-${i}`} className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
                       <p className="text-sm font-semibold">Midfielder</p>
                     </div>
@@ -326,7 +341,7 @@ const Dashboard = () => {
                 
                 {/* Forwards */}
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {positions.Forward.map((player) => (
+                  {positions.FWD.map((player) => (
                     <div key={player.id} className="relative">
                       <PlayerCard player={player} />
                       <button
@@ -337,7 +352,7 @@ const Dashboard = () => {
                       </button>
                     </div>
                   ))}
-                  {[...Array(2 - positions.Forward.length)].map((_, i) => (
+                  {[...Array(2 - positions.FWD.length)].map((_, i) => (
                     <div key={`fwd-empty-${i}`} className="text-white text-center bg-white bg-opacity-10 rounded-lg px-8 py-6 backdrop-blur-sm">
                       <p className="text-sm font-semibold">Forward</p>
                     </div>
@@ -352,24 +367,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-purple-800 rounded-2xl p-6 shadow-2xl border-2 border-purple-400">
             <h2 className="text-3xl font-bold text-white mb-6">Available Players - Click to Add</h2>
-            
-            {/* Filter by position */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map(position => (
-                <div key={position}>
-                  <h3 className="text-xl font-bold text-purple-200 mb-3">{position}s</h3>
-                  <div className="space-y-3">
-                    {availableToAdd
-                      .filter(p => p.position === position)
-                      .map(player => (
-                        <div key={player.id} className="cursor-pointer" onClick={() => addPlayerToTeam(player)}>
-                          <PlayerCard player={player} />
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PlayerSearch setSelectedPlayer={addPlayerToTeam} />
           </div>
         </div>
       </div>
@@ -416,16 +414,16 @@ const Dashboard = () => {
               </h2>
               <div className="flex flex-col gap-8">
                 <div className="flex justify-center gap-4">
-                  {positions.Goalkeeper.map(player => <PlayerCard key={player.id} player={player} />)}
+                  {positions.GKP.map(player => <PlayerCard key={player.id} player={player} />)}
                 </div>
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {positions.Defender.map(player => <PlayerCard key={player.id} player={player} />)}
+                  {positions.DEF.map(player => <PlayerCard key={player.id} player={player} />)}
                 </div>
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {positions.Midfielder.map(player => <PlayerCard key={player.id} player={player} />)}
+                  {positions.MID.map(player => <PlayerCard key={player.id} player={player} />)}
                 </div>
                 <div className="flex justify-center gap-4 flex-wrap">
-                  {positions.Forward.map(player => <PlayerCard key={player.id} player={player} />)}
+                  {positions.FWD.map(player => <PlayerCard key={player.id} player={player} />)}
                 </div>
               </div>
             </div>
