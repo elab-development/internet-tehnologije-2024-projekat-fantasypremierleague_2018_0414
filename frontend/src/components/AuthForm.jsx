@@ -32,31 +32,41 @@ export default function AuthForm({
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    const requiredFields = mode === 'login' 
-      ? ['email', 'password'] 
-      : ['email', 'password', 'confirmPassword', 'firstName', 'lastName'];
-    
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-      alert('Please fill in all fields.');
-      return;
-    }
+  e.preventDefault();
 
-    if (mode === 'register' && formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match.');
-      return;
-    }
-    
-    if (onSubmit) {
-      onSubmit(formData, navigate);
-    } else {
-      console.log(`${mode} attempt:`, formData);
-      navigate(redirectPath);
-    }
-  };
+  const requiredFields = mode === 'login' 
+    ? ['email', 'password'] 
+    : ['email', 'password', 'confirmPassword', 'firstName', 'lastName'];
+
+  const missingFields = requiredFields.filter(field => !formData[field]);
+
+  if (missingFields.length > 0) {
+    alert('Please fill in all fields.');
+    return;
+  }
+
+  if (mode === 'register' && formData.password !== formData.confirmPassword) {
+    alert('Passwords do not match.');
+    return;
+  }
+
+  let submitData = formData;
+  if (mode === 'register') {
+    submitData = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      password: formData.password,
+      password_confirmation: formData.confirmPassword
+    };
+  }
+
+  if (onSubmit) {
+    onSubmit(submitData, navigate);
+  } else {
+    console.log(`${mode} attempt:`, submitData);
+    navigate(redirectPath);
+  }
+};
 
   const handleForgotPassword = () => {
     alert('Password reset functionality would be implemented here.');

@@ -1,24 +1,31 @@
 <?php
 
-use App\Http\Controllers\TableController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\PlayerController;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\TableController;
 
-
+// public
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
-Route::get('teams/{team}/players', [TeamController::class, 'players']);
+
 Route::get('players', [PlayerController::class, 'index']);
 Route::get('analytics/pl-standings', [TableController::class, 'plStandings']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('teams', TeamController::class);
-   // Route::apiResource('players', PlayerController::class);
+// View a specific team's players (public)
+Route::get('teams/{team}/players', [TeamController::class, 'players']);
 
+// Protected Routes (Require Sanctum Auth)
+
+Route::middleware('auth:sanctum')->group(function () {
+    // User's team management
+    Route::apiResource('teams', TeamController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+
+    // Add/remove players from a team
     Route::post('teams/{team}/add-player', [TeamController::class, 'addPlayer']);
     Route::delete('teams/{team}/remove-player/{player}', [TeamController::class, 'removePlayer']);
 
+    // Logout
     Route::post('logout', [AuthController::class, 'logout']);
 });

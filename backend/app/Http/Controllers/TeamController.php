@@ -1,48 +1,39 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Support\Facades\DB;
 
-use Illuminate\Http\Request;
 use App\Models\Team;
+use Illuminate\Http\Request;
+
 class TeamController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    // Show only the logged-in user's team(s)
+    public function index(Request $request)
     {
-        $teams = DB::table('teams')->get();
+        $teams = Team::where('user_id', $request->user()->id)->get();
         return response()->json($teams, 200);
     }
 
-
-
+    // Create a new team for the logged-in users
     public function store(Request $request)
     {
-
         $validated = $request->validate([
             'name' => 'required|string|unique:teams,name',
             'budget' => 'nullable|integer|min:0',
-            'user_id' => 'required|exists:users,id',
         ]);
 
-        try {
-            $team = Team::create($validated);
-            return response()->json($team, 201);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to create team', 'message' => $e->getMessage()], 500);
-        }
+        $team = Team::create([
+            'name' => $validated['name'],
+            'budget' => $validated['budget'] ?? 100, // default budget
+            'user_id' => $request->user()->id, // ✅ logged-in user
+        ]);
+
+        return response()->json($team, 201);
     }
 
-
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        $team = Team::find($id);
+        $team = Team::where('id', $id)->where('user_id', auth()->id())->first();
 
         if (!$team) {
             return response()->json(['error' => 'Team not found'], 404);
@@ -51,48 +42,78 @@ class TeamController extends Controller
         return response()->json($team, 200);
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        $team = Team::find($id);
+        $team = Team::where('id', $id)->where('user_id', auth()->id())->first();
 
         if (!$team) {
             return response()->json(['error' => 'Team not found'], 404);
         }
 
-        // Validate input
         $validated = $request->validate([
             'name' => 'sometimes|required|string|unique:teams,name,' . $id,
             'budget' => 'sometimes|integer|min:0',
         ]);
 
-        try {
-            $team->update($validated);
-            return response()->json($team, 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to update team', 'message' => $e->getMessage()], 500);
-        }
+        $team->update($validated);
+
+        return response()->json($team, 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        $team = Team::find($id);
+        $team = Team::where('id', $id)->where('user_id', auth()->id())->first();
 
         if (!$team) {
             return response()->json(['error' => 'Team not found'], 404);
         }
 
-        try {
-            $team->delete();
-            return response()->json(['message' => 'Team deleted'], 200);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to delete team', 'message' => $e->getMessage()], 500);
-        }
+        $team->delete();
+
+        return response()->json(['message' => 'Team deleted'], 200);
     }
+
+
+
+    // Add a player to a team
+    public function addPlayer(Request $request, Team $team)
+    {
+        // Check authorization
+        if ($team->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'player_id' => 'required|exists:players,id',
+        ]);
+
+        // Check if player already exists in team (optional)
+        if ($team->players()->where('player_id', $validated['player_id'])->exists()) {
+            return response()->json(['error' => 'Player already in team'], 400);
+        }
+
+        $team->players()->attach($validated['player_id']);
+
+        return response()->json([
+            'message' => 'Player added',
+            'team' => $team->load('players')
+        ], 200);
+    }
+
+    // Remove a player from a team
+    public function removePlayer(Team $team, $playerId)
+    {
+        // Check authorization
+        if ($team->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $team->players()->detach($playerId);
+
+        return response()->json([
+            'message' => 'Player removed',
+            'team' => $team->load('players')
+        ], 200);
+    }
+
 }
