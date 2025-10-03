@@ -110,7 +110,7 @@ const Navbar = ({ currentPage = "home" }) => {
             <div className="flex items-center space-x-4">
               {/* User greeting with admin badge */}
               <span className="text-white text-sm hidden sm:flex items-center space-x-2">
-                <span>Welcome, {user?.name || 'User'}</span>
+                <span></span>
                 {hasRole('admin') && (
                   <span className="bg-purple-900/50 text-purple-200 text-xs px-2 py-1 rounded-full font-semibold">
                     Admin

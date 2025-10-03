@@ -12,6 +12,7 @@ import Analytics from './components/Analytics';
 import Dashboard from './components/Dashboard';
 import AdminPanel from './components/AdminPanel';
 import Unauthorized from './components/Unauthorized';
+console.log(AuthProvider);
 
 const players = [
   { id: 1, name: "Erling Haaland", team: "Manchester City", position: "Forward", predictedPoints: 9.2, photo: "https://resources.premierleague.com/premierleague25/photos/players/110x140/223094.png" },
