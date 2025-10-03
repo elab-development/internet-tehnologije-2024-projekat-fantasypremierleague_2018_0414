@@ -1,25 +1,26 @@
+// src/components/LoginPage.jsx
 import AuthForm from './AuthForm';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
-function LoginPage({ setIsAuth }) {
+function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (formData) => {
     try {
-      const response = await axios.post('http://localhost:8000/api/login', formData);
-      const { token } = response.data;
+      // Use the login function from AuthContext
+      const result = await login(formData);
 
-      // Store token
-      localStorage.setItem('token', token);
-
-      // Update App state state
-      setIsAuth(true);
-
-      // Redirect to dashboard after login
-      navigate('/dashboard');
+      if (result.success) {
+        // Redirect to dashboard after successful login
+        navigate('/dashboard');
+      } else {
+        // Show error message
+        alert('Login failed: ' + result.error);
+      }
     } catch (error) {
-      alert('Login failed: ' + (error.response?.data?.message || error.message));
+      alert('Login failed: ' + error.message);
     }
   };
 
