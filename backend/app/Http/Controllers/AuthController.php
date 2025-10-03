@@ -24,7 +24,15 @@ class AuthController extends Controller
         ]);
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response()->json(['token' => $token], 201);
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+            'token' => $token
+        ], 201);
     }
 
     
@@ -45,15 +53,43 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response()->json(['token' => $token], 200);
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+            ],
+            'token' => $token
+        ], 200);
     }
 
    
     public function logout(Request $request)
     {
-        
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Logged out successfully'], 200);
+    }
+
+    /**
+     * Get authenticated user
+     */
+    public function user(Request $request)
+    {
+        return response()->json([
+            'id' => $request->user()->id,
+            'name' => $request->user()->name,
+            'email' => $request->user()->email,
+            'role' => $request->user()->role,
+        ]);
+    }
+
+    /**
+     * Get all users (Admin only)
+     */
+    public function getAllUsers()
+    {
+        $users = User::select('id', 'name', 'email', 'role', 'created_at')->get();
+        return response()->json(['users' => $users]);
     }
 }
