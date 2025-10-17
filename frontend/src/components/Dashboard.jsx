@@ -10,7 +10,7 @@ const Dashboard = () => {
   const [team, setTeam] = useState(null);
   const [availablePlayers, setAvailablePlayers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false); 
   const [isEditingTeam, setIsEditingTeam] = useState(false);
   
   // Team creation/editing state

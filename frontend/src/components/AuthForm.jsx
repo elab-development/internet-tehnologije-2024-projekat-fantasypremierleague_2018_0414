@@ -69,7 +69,7 @@ export default function AuthForm({
 };
 
   const handleForgotPassword = () => {
-    alert('Password reset functionality would be implemented here.');
+    navigate('/forgot-password');
   };
 
   const handleToggleMode = () => {

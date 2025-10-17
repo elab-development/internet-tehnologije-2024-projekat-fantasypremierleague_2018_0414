@@ -13,8 +13,8 @@ function LoginPage() {
       const result = await login(formData);
 
       if (result.success) {
-        // Redirect to dashboard after successful login
-        navigate('/dashboard');
+        // Redirect to homepage after successful login
+        navigate('/home');
       } else {
         // Show error message
         alert('Login failed: ' + result.error);

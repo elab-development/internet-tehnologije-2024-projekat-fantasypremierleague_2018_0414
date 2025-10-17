@@ -12,6 +12,8 @@ import Analytics from './components/Analytics';
 import Dashboard from './components/Dashboard';
 import AdminPanel from './components/AdminPanel';
 import Unauthorized from './components/Unauthorized';
+import ForgotPasswordPage from './components/ForgotPasswordPage'; // or './pages/ForgotPasswordPage'
+import ResetPasswordPage from './components/ResetPasswordPage';
 console.log(AuthProvider);
 
 const players = [
@@ -26,14 +28,16 @@ function App() {
       <BrowserRouter>
         <Navbar currentPage="home" />
         <Routes>
-          {/* Public routes - anyone can access */}
+          {/* Public routes */}
           <Route path="/" element={<HomePage players={players} />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegistrationPage />} />
           <Route path="/analytics" element={<Analytics players={players} />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
-          
-          {/* Protected routes - only logged in users */}
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} /> 
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+          {/* Protected routes */}
           <Route 
             path="/dashboard" 
             element={
@@ -43,7 +47,7 @@ function App() {
             } 
           />
           
-          {/* Admin only routes */}
+          {/* Admin routes */}
           <Route 
             path="/admin" 
             element={
@@ -53,7 +57,7 @@ function App() {
             } 
           />
           
-          {/* Catch all - redirect to home */}
+          {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
