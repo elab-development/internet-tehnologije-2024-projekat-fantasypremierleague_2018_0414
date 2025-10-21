@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TableController;
+use App\Http\Controllers\UserController;
 
 // -----------------------------------
 // Public routes
@@ -56,9 +57,9 @@ Route::get('players', [PlayerController::class, 'index']);
 Route::get('analytics/pl-standings', [TableController::class, 'plStandings']);
 
 
-// -----------------------------------
+
 // Protected routes (Require Sanctum)
-// -----------------------------------
+
 Route::middleware('auth:sanctum')->group(function () {
     // Get authenticated user
     Route::get('user', [AuthController::class, 'user']);
@@ -73,7 +74,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('teams/{team}/sync-players', [TeamController::class, 'syncPlayers']);
     
     // Admin only routes
-    Route::middleware('role:admin')->prefix('admin')->group(function () {
-        Route::get('users', [AuthController::class, 'getAllUsers']);
+    Route::middleware('auth:sanctum')
+    ->prefix('admin')
+    ->group(function () {
+        Route::apiResource('users', UserController::class);
     });
+
 });

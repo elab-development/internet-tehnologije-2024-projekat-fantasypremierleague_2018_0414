@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: fpl_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "@Ghostfreak123!"
+      MYSQL_DATABASE: fpl
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fpl_backend
+    restart: always
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=fpl
+      - DB_USERNAME=root
+      - DB_PASSWORD=@Ghostfreak123!
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/var/www/html
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fpl_frontend
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
